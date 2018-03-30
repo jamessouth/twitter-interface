@@ -1,0 +1,29 @@
+{
+  "name": "js-project-7",
+  "version": "1.0.0",
+  "description": "node/express twitter interface",
+  "main": "js/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node js/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamessouth/JS-Project-7.git"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "twitter"
+  ],
+  "author": "james south",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jamessouth/JS-Project-7/issues"
+  },
+  "homepage": "https://github.com/jamessouth/JS-Project-7#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "pug": "^2.0.3"
+  }
+}
