@@ -2168,9 +2168,9 @@ body {
   padding: 0;
   height: 100%;
 }
-/* line 46, ../sass/global.sass */
+/* line 46, ../sass/global.sass height of 100% changed to 75% so all content can be scrolled down to*/
 .app--section {
-  height: 100%;
+  height: 75%;
   border-right: 1px solid #e1e1e1;
   overflow-Y: scroll;
 }
@@ -2269,10 +2269,10 @@ a:hover .app--avatar {
 .app--tweet--post textarea {
   padding-right: 60px;
 }
-/* line 117, ../sass/global.sass */
+/* line 117, ../sass/global.sass changing right to 35px from 30 to get text away from scroll bar*/
 .app--tweet--char {
   position: absolute;
-  right: 30px;
+  right: 35px;
   bottom: 12px;
   color: #ccc;
   font-size: 1.8rem;
@@ -2450,7 +2450,7 @@ a:hover .app--avatar {
   position: absolute;
   left: -8px;
   bottom: 0px;
-  background: #a86cc6 url("../images/message-tail.svg") no-repeat;
+  background: #a86cc6 url("/message-tail.svg") no-repeat;
   width: 16px;
   height: 20px;
 }
@@ -2487,7 +2487,7 @@ a:hover .app--avatar {
 }
 /* line 267, ../sass/global.sass */
 .app--message--me .app--message--text:after {
-  background: #1da1f2 url("../images/message-tail-me.svg") no-repeat;
+  background: #1da1f2 url("/message-tail-me.svg") no-repeat;
   left: auto;
   right: -8px;
 }
