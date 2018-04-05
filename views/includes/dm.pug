@@ -1,0 +1,6 @@
+mixin DirectMessage(me, image, text, time)
+  li(class=me ? "app--message--me" : "app--message")
+    .app--avatar(style=`background-image: url(${image})`)
+      img(src=image)
+    p.app--message--text #{text}
+    p.app--message--timestamp #{time}

@@ -1,9 +1,11 @@
-li
-  strong.app--tweet--timestamp 4h
-  a.app--tweet--author
-    .app--avatar(style='background-image: url(f-spore.png)')
-      img(src='f-spore.png')
-    h4 Jill Spore
-    span  @jillspore
-  p It&apos;s time I come clean about a few things: The pretzel is my favorite chip.
-  include tweetbtns.pug
+include tweetbtns.pug
+mixin Tweet(time, image, name, user, text, retweets, likes)
+  li
+    strong.app--tweet--timestamp #{time}
+    a.app--tweet--author
+      .app--avatar(style=`background-image: url(${image})`)
+        img(src=image)
+      h4 #{name}
+      span  #{user}
+    p #{text}
+    +Tweetbutton(retweets, likes)

@@ -1,4 +1,6 @@
+include tweet.pug
 .grid-33
   .app--section
     ul.app--tweet--list
-      include tweet.pug
+      each val in timeline
+        +Tweet(val[6], val[3], val[2], val[1], val[0], val[4], val[5])

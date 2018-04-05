@@ -47,23 +47,42 @@ app.use((req, res, next) => {
   });
 });
 
-
+app.use((req, res, next) => {
+	const user_id = Tweet.config.access_token.split('-')[0];
+	Promise.resolve(getDataFromID(user_id)).then(pkg => res.masterObject.user = [pkg.data.screen_name, pkg.data.profile_image_url_https, pkg.data.profile_banner_url]).then(() => next());
+});
 
 app.use((req, res, next) => {
   Tweet.get('direct_messages/events/list', (err, data, resp) => {
     Promise.all(data.events.reverse().map(async x => {
 			let sender = await getDataFromID(x.message_create.sender_id);
 			let recipient = await getDataFromID(x.message_create.target.recipient_id);
-			return [recipient.data.name, recipient.data.profile_image_url_https, sender.data.name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
+			return [recipient.data.name, recipient.data.screen_name, recipient.data.profile_image_url_https, sender.data.name, sender.data.screen_name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
 		})).then(pkg => res.masterObject.dms = pkg).then(() => next());
 	});
 });
 
 
 app.get('/', (req, res) => {
-	// console.log(res.masterObject);
+	console.log(res.masterObject);
 	const data = res.masterObject;
-  res.render('index', {data});
+	const timeline = data.timeline;
+	const following = data.following;
+	const numFollowed = data.numFollowed;
+	const user = data.user;
+	const dms = data.dms;
+  res.render('index', {timeline, following, numFollowed, user, dms});
+});
+
+app.use((req, res, next) => {
+	const err = new Error('Page Not Found');
+	err.status = 404;
+	next(err);
+});
+
+app.use((err, req, res, next) => {
+	res.status(err.status || 500);
+	res.render('error', {message: err.message, error: {}});
 });
 
 app.listen(3000);
