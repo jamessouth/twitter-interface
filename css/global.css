@@ -2500,3 +2500,22 @@ input[type="reset"],
 input[type="button"] {
   padding: 16px 20px;
 }
+
+/* additional styles */
+@keyframes errorAnim{
+  0% {fill: #1da1f2; transform: rotateX(0deg);}
+  100% {fill: #000; transform: rotateX(80deg);}
+}
+
+.error{
+  display: flex;
+  justify-content: center;
+}
+
+.error > svg{
+  width: 200px;
+  height: 200px;
+  fill: #1da1f2;
+  transform-origin: bottom;
+  animation: 2.4s .5s cubic-bezier(0.94, 0.04, 0.94, 0.33) forwards errorAnim;
+}

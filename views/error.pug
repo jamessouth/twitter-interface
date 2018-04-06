@@ -2,4 +2,7 @@ doctype html
 html
   include includes/head.pug
   body
-    h1 Page not found
+    include includes/header.pug
+    h1 #{message}
+    .error
+      include includes/logoSVG.pug
