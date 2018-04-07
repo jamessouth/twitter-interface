@@ -14,7 +14,30 @@ function abbrev(match, p1, p2){
 	return `${p1}${p2[0]}`;
 }
 
+function package(p, next){
+	if(p.data.errors){
+		const err = new Error('Data error - please try again. - users.show');
+		// next(err);
+		return Promise.reject(err);
+	} else {
+		console.log(p);
+		return p;
+	}
+}
 
+async function getDataFromID(id, next){
+	let pkg;
+	try{
+		pkg = await Tweet.get('use35673rs/show.li67', {user_id: id});
+
+	} catch(e){
+		err.message = 'Data error - please try again. - users.show4242';
+		next(err);
+
+	}
+	return package(pkg, next);
+
+}
 
 function twitterTime(timeString){
 	let time = moment(timeString, 'ddd MMM DD HH:mm:ss ZZ YYYY');
@@ -29,84 +52,96 @@ function twitterTime(timeString){
 app.use((req, res, next) => {
 	res.masterObject = {};
 	const id = Tweet.config.access_token.split('-')[0];
-	Tweet.get('users/show', {user_id: id}).then(pkg => {
-		console.log('line 33', pkg.data);
-		if(pkg.data.errors){
-			const err = new Error('Data error - please try again. - users.show3535353535');
-			next(err);
-		} else {
-			res.masterObject.user = [pkg.data.screen_name, pkg.data.profile_image_url_https, pkg.data.profile_banner_url];
-		}
-	}, err => {
-		console.log('line 42, ');
-		err.message = 'Data error - please try again. - users.show4242';
-		next(err);
-	})
-	.then(() => {
-		console.log('line 45');
+	getDataFromID(id, next)
+
+
+		.then(r => {
+		// console.log('line 45');
+		res.masterObject.user = [r.data.screen_name, r.data.profile_image_url_https, r.data.profile_banner_url];
 		next();
+	}, err => {
+		console.log('62');
+		next(err);
 	});
 });
 
 
-
 // app.use((req, res, next) => {
-//
-//   Tweet.get('statuses/user_timeline', {count: 1}, (err, data, resp) => {
-//     Promise.all(data.map(x => {
-// 			return [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)];
-// 		})).then(pkg => res.masterObject.timeline = pkg).then(() => next());
-//   });
-// });
-
-// app.use((req, res, next) => {
-//   Tweet.get('friends/list', {count: 1}, (err, data, resp) => {
-// 		if(err){next(err);return;}
-//     Promise.all(data.users.map(x => {
-// 			return [x.name, `@${x.screen_name}`, x.profile_image_url_https];
-// 		})).then(pkg => {
-// 			res.masterObject.following = pkg;
-// 			res.masterObject.numFollowed = data.users.length;
-// 		}).then(() => next());
-//   });
-// });
-
-// app.use((req, res, next) => {
-//
-// 	Promise.resolve(getDataFromID(user_id)).then(pkg => {
+//   Tweet.get('statuses/user_timeline', {count: 1}).then(pkg => {
+// 		// console.log(pkg.data);
 // 		if(pkg.data.errors){
-// 			Promise.reject(new Error('Data error - please try again.')).then(() => {}, err => next(err));
+// 			const err = new Error('Data error - please try again. - users.show56');
+// 			next(err);
+// 		} else {
+// 			return Promise.all(pkg.data.map(x => {
+// 				return [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)];
+// 			})).then(pkge => res.masterObject.timeline = pkge);
 // 		}
-// 		res.masterObject.user = [pkg.data.screen_name, pkg.data.profile_image_url_https, pkg.data.profile_banner_url];
 // 	}, err => {
-// 		err.message = 'Data error - please try again.';
+// 		err.message = 'Data error - please try again. - users.show63';
 // 		next(err);
 // 	}).then(() => next());
+//
 // });
 
 // app.use((req, res, next) => {
-//   Tweet.get('direct_messages/events/list', (err, data, resp) => {
-// 		if(err){next(err);return;}
-//     Promise.all(data.events.reverse().map(async x => {
-// 			try{
-// 				let sender = await getDataFromID(x.message_create.sender_id);
-// 				let recipient = await getDataFromID(x.message_create.target.recipient_id);
-//
-// 				return [recipient.data.name, recipient.data.screen_name, recipient.data.profile_image_url_https, sender.data.name, sender.data.screen_name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
-// 			} catch(e){console.log('here error');}
-// 		})).then(pkg => res.masterObject.dms = pkg, err => {
-// 			// console.log(err);
-// 			err.message = 'Data error - please try againeeee.';
+//   Tweet.get('friends/list', {count: 2}).then(pkg => {
+// 		if(pkg.data.errors){
+// 			const err = new Error('Data error - please try again. - users.show73');
 // 			next(err);
-// 		}).then(() => next());
+// 		} else {
+// 			return Promise.all(pkg.data.users.map(x => {
+// 				return [x.name, `@${x.screen_name}`, x.profile_image_url_https];
+// 			})).then(pkge => {
+// 				// console.log(pkge);
+// 				res.masterObject.following = pkge;
+// 				res.masterObject.numFollowed = pkge.length;
+// 			});
+// 		}
+// 	}, err => {
+// 		err.message = 'Data error - please try again. - users.show63';
+// 		next(err);
+// 	}).then(() => next());
+//
+// });
+
+
+
+// app.use((req, res, next) => {
+//   Tweet.get('direct_messages/events/list').then(pkg => {
+// 		if(pkg.data.errors){
+// 			const err = new Error('Data error - please try again. - users.show96');
+// 			next(err);
+// 		} else {
+// 			return Promise.all(pkg.data.events.reverse().map(x => {
+//
+// 					let sender = await getDataFromID(x.message_create.sender_id);
+// 					let recipient = await getDataFromID(x.message_create.target.recipient_id);
+//
+// 					return [recipient.data.name, recipient.data.screen_name, recipient.data.profile_image_url_https, sender.data.name, sender.data.screen_name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
+//
+// 			}))
+// 		}
+// 	}, err => {
+//
 // 	});
 // });
+
+    // .then(pkg => res.masterObject.dms = pkg, err => {
+		// 	// console.log(err);
+		// 	err.message = 'Data error - please try againeeee.';
+		// 	next(err);
+		// }).then(() => next());
+
+
 
 
 
 
 app.get('/', (req, res) => {
-	console.log('line 109, ' + res.masterObject.user);
+	// console.log(res.masterObject.user);
+	// console.log();
+	// console.log(res.masterObject.timeline);
 	// const data = res.masterObject;
 	// const timeline = data.timeline;
 	// const following = data.following;
