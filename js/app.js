@@ -1,7 +1,10 @@
 const express = require('express');
 const moment = require('moment');
+const bodyParser = require('body-parser');
 const Tweet = require('../config');
 const app = express();
+
+const urleParser = bodyParser.urlencoded({extended: false});
 
 moment.updateLocale('en', {relativeTime: {d: '1 day', h: '1 hour', m: '1 minute'}});
 
@@ -106,7 +109,7 @@ app.use((req, res, next) => {
 // app.use((r,e,n) => {
 //
 // 	// e.masterObject = {};
-// 	// Tweet.get('application/rate_limit_status').then(x => console.log(x.data.resources));
+// 	Tweet.get('application/rate_limit_status').then(x => console.log(x.data.resources.users, x.data.resources.statuses, x.data.resources.direct_messages, x.data.resources.friends));
 //
 //
 //
@@ -114,7 +117,18 @@ app.use((req, res, next) => {
 // 	n();
 // });
 
+app.post('/', urleParser, (req, res, next) => {
+	// console.log(req);
+	console.log('122', req.body);
 
+
+	Tweet.post('stat45645uses/update', {status: req.body.tweet}).then(null, err => next(err)).then(() => callAPI('statuses/user_timeline', {count: 5})).then(r => {
+		res.masterObject.timeline = r.data.map(x => [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)]);
+		res.redirect('/');
+	}, err =>	next(err));
+
+
+});
 
 
 app.get('/', (req, res) => {
@@ -122,6 +136,9 @@ app.get('/', (req, res) => {
 	// console.log(res.masterObject.user);
 	// console.log();
 	// console.log(res.masterObject.timeline);
+
+
+
 	const data = res.masterObject;
 	const timeline = data.timeline;
 	const following = data.following;
@@ -131,10 +148,7 @@ app.get('/', (req, res) => {
   res.render('index', {timeline, following, numFollowed, user, dms});
 });
 
-app.post('/', (req, res) => {
 
-	Tweet.post('statuses/update', {status: 'word'}).then(j => console.log(j));
-});
 
 app.use((req, res, next) => {
 
