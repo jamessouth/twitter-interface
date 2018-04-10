@@ -1,10 +1,22 @@
 .app--tweet
-  form(action="/", method="post")
+  form(action="/", method="POST")
     .circle--fluid
       .circle--fluid--cell.circle--fluid--primary.align-bottom.app--tweet--post
         .app--avatar(style=`background-image: url(${user[1]})`)
           img(src=user[1])
-        textarea#tweet-textarea.circle--textarea--input(placeholder="What's happening?")
-        strong#tweet-char.app--tweet--char 140
+        textarea#tweet-textarea.circle--textarea--input(placeholder="What's happening?", name="tweet", required="true", maxlength="280", minlength="0")
+        strong#tweet-char.app--tweet--char 280
       .circle--fluid--cell.align-bottom
         button.button-primary(type="submit") Tweet
+  script.
+    const charsLeft = document.querySelector('#tweet-char');
+    const textarea = document.querySelector('#tweet-textarea');
+    textarea.addEventListener('input', e => {
+      let remainingChars = 280 - textarea.value.length;
+      if(remainingChars < 10){
+        charsLeft.style.color = 'red';
+      } else {
+        charsLeft.style.color = '#ccc';
+      }
+      charsLeft.textContent = remainingChars;
+    });
