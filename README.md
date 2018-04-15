@@ -1,6 +1,6 @@
 # JS-Project-7
 
-A node/express Twitter interface with moment.js and pug.  Hits Twitter API endpoints to get last 5 tweets, last 5 follows and last 5 DMs, and allows the posting of new Tweets.  Styles were provided by Treehouse and haven't been modified to be properly responsive so this may not look good on mobile right now.
+A node/express Twitter interface with moment.js and pug.  Hits Twitter API endpoints to get last 5 tweets, last 5 follows and last 5 DMs, and allows the posting of new Tweets.  Styles were provided by Treehouse.
 
 Download the ZIP, run ```npm install``` then ```npm start``` and the server will be running on your localhost port 3000.
 
