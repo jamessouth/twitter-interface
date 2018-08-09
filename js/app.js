@@ -70,7 +70,8 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  callAPI('direct_messages/events/list', {count: 6}).then(r =>
+  callAPI('direct_messages/events/list', {count: 6}).then(r => {
+    console.log(r);
     Promise.all(r.data.events.reverse().map(async x => {
       try{
         let sender = await callAPI('users/show', {user_id: x.message_create.sender_id});
@@ -80,7 +81,7 @@ app.use((req, res, next) => {
         e.message = e.message || 'Data error - please try again.';
         return Promise.reject(e);
       }
-    })).then(n => app.locals.dms = n, err => next(err)).then(() => next()), err => next(err));
+    })).then(n => app.locals.dms = n, err => next(err)).then(() => next()), err => next(err)});
 });
 
 app.post('/', urleParser, (req, res, next) => {
