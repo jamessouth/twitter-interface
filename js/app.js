@@ -35,9 +35,17 @@ async function callAPI(endpoint, config){
   }
 }
 
+function getData(endpoint, config){
+  return new Promise((resolve, reject) => {
+    callAPI(endpoint, config, resolve);
+  });
+}
+
+
+
 function twitterTime(timeString){
   let time = moment(timeString, 'ddd MMM DD HH:mm:ss ZZ YYYY');
-  if(time.diff(moment()) < -518400000){//6 days
+  if(time.diff(moment()) < -518400000){ // 6 days
     return time.format('DD MMM');
   } else {
     return time.fromNow(true).replace(/(\d{1,2}) (\w+)/i, abbrev);
@@ -45,8 +53,10 @@ function twitterTime(timeString){
 }
 
 app.use((req, res, next) => {
+
   const id = Tweet.config.access_token.split('-')[0];
   callAPI('users/show', {user_id: id}).then(r => {
+    console.log('user', Date.now());
     app.locals.user = [r.data.screen_name, r.data.profile_image_url_https, r.data.profile_banner_url];
     next();
   }, err => {
@@ -55,14 +65,18 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+
   callAPI('statuses/user_timeline', {count: 5}).then(r => {
+    console.log('tweets', Date.now());
     app.locals.timeline = r.data.map(x => [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)]);
     next();
   }, err =>  next(err));
 });
 
 app.use((req, res, next) => {
+
   callAPI('friends/list', {count: 5}).then(r => {
+    console.log('friends', Date.now());
     app.locals.following = r.data.users.map(x => [x.name, `@${x.screen_name}`, x.profile_image_url_https]);
     app.locals.numFollowed = r.data.users.length;
     next();
@@ -70,8 +84,10 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
+
   callAPI('direct_messages/events/list', {count: 6}).then(r => {
-    console.log(r);
+    // console.log(r);
+    console.log('dms', Date.now());
     Promise.all(r.data.events.reverse().map(async x => {
       try{
         let sender = await callAPI('users/show', {user_id: x.message_create.sender_id});
@@ -83,6 +99,27 @@ app.use((req, res, next) => {
       }
     })).then(n => app.locals.dms = n, err => next(err)).then(() => next()), err => next(err)});
 });
+
+
+
+app.use((req, res, next) => {
+  callAPI('application/rate_limit_status').then(r => {
+    console.log('rate limit', Date.now());
+    console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
+    next();
+  }, err => next(err));
+});
+
+
+
+
+app.use((req, res, next) => {
+
+
+});
+
+
+
 
 app.post('/', urleParser, (req, res, next) => {
   Tweet.post('statuses/update', {status: req.body.tweet}).
@@ -98,6 +135,7 @@ app.post('/', urleParser, (req, res, next) => {
 });
 
 app.get('/', (req, res) => {
+  console.log('get', Date.now());
   const data = app.locals;
   const timeline = data.timeline;
   const following = data.following;
