@@ -4,13 +4,7 @@ include dm.pug
     ul.app--message--list
       li
         h3 Conversation with
-          if dms[0][1] === user[0]
-            a  #{dms[0][3]}
-          else
-            a  #{dms[0][0]}
+          a  #{dmConvoWith}
         ul.app--message--conversation
           each val in dms
-            if val[4] === user[0]
-              +DirectMessage(true, val[5], val[6], val[7])
-            else
-              +DirectMessage(false, val[5], val[6], val[7])
+            +DirectMessage(val.sender.classToApply, val.sender.img, val.text, val.created)
