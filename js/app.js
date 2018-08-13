@@ -52,35 +52,6 @@ function twitterTime(timeString){
   }
 }
 
-
-
-// app.use((req, res, next) => {
-//
-//   callAPI().then(r => {
-//     // console.log(r);
-//     console.log('dms', Date.now());
-//     Promise.all(r.data.events.reverse().map(async x => {
-//       try{
-//         let sender = await callAPI('users/show', {user_id: x.message_create.sender_id});
-//         let recipient = await callAPI('users/show', {user_id: x.message_create.target.recipient_id});
-//         return [recipient.data.name, recipient.data.screen_name, recipient.data.profile_image_url_https, sender.data.name, sender.data.screen_name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
-//       } catch(e){
-//         e.message = e.message || 'Data error - please try again.';
-//         return Promise.reject(e);
-//       }
-//     })).then(n => app.locals.dms = n, err => next(err)).then(() => next()), err => next(err)});
-// });
-
-
-
-// app.use((req, res, next) => {
-//   callAPI().then(r => {
-//     console.log('rate limit', Date.now());
-//     console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
-//     next();
-//   }, err => next(err));
-// });
-
 app.use((req, res, next) => {//the default request for an icon sometimes calls the middleware again and double-requests the twitter data, so this shuts that off so there's only one request
   if(req.originalUrl && req.originalUrl.includes('favicon')){
     return res.sendStatus(204);
@@ -102,13 +73,11 @@ getData('application/rate_limit_status').then(r => {
     getData('friends/list', {count: 5}),
     getData('direct_messages/events/list', {count: 6}),
   ]).then(results => {
-    console.log('start sync', Date.now());
     app.locals.user = [results[0].data.screen_name, results[0].data.profile_image_url_https, results[0].data.profile_banner_url];
-    console.log(app.locals.user, Date.now());
+
     app.locals.timeline = results[1].data.map(twt => {
       return [twt.text, `@${twt.user.screen_name}`, twt.user.name, twt.user.profile_image_url_https, twt.retweet_count, twt.favorite_count, twitterTime(twt.created_at)];
     });
-
 
     app.locals.following = results[2].data.users.map(fr => [fr.name, `@${fr.screen_name}`, fr.profile_image_url_https]);
 
@@ -122,7 +91,6 @@ getData('application/rate_limit_status').then(r => {
         text: msg.message_create.message_data.text,
       };
     });
-console.log(app.locals.dms, Date.now());
     const partyOne = app.locals.dms[0].from;
     const partyTwo = app.locals.dms[0].to;
 
@@ -153,8 +121,9 @@ console.log(app.locals.dms, Date.now());
       }
       return { ...dm, sender: { ...firstParty }, recipient: { ...secondParty }};
     });
+    next();
   });
-  next();
+
 });
 
 app.post('/', urleParser, (req, res, next) => {
@@ -178,17 +147,16 @@ app.get('/', (req, res) => {
   const dmConvoWith = data.dmConvoWith;
   const user = data.user || ['', '', ''];
   const dms = data.dms;
-  res.render('index', {timeline, following, numFollowed, dmConvoWith, user, dms});
+  res.render('index');
 });
 
 
-// app.use((req, res, next) => {
-//   const err = new Error('Page Not Found...');
-//   next(err);
-// });
+app.use((req, res, next) => {
+  const err = new Error('Page Not Found...');
+  next(err);
+});
 
 app.use((err, req, res, next) => {
-  console.log(err);
   const user = app.locals.user || ['', '', ''];
   res.render('error', {message: err.message, user});
 });
