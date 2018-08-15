@@ -46,13 +46,14 @@ app.use((req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.method !== 'GET') return next();
 
+  const [ , , tl, fr, dm] = process.argv.map(arg => Math.abs(parseInt(arg, 10)));
   const userID = Tweet.config.access_token.split('-')[0];
-
+  console.log(tl, fr, dm);
   const APICallArray = [
     initiateHitEndpoint('get', 'users/show', { user_id: userID }),
-    initiateHitEndpoint('get', 'statuses/user_timeline', { count: 5 }),
-    initiateHitEndpoint('get', 'friends/list', { count: 5 }),
-    initiateHitEndpoint('get', 'direct_messages/events/list', { count: 6 }),
+    initiateHitEndpoint('get', 'statuses/user_timeline', { count: tl || 5 }),
+    initiateHitEndpoint('get', 'friends/list', { count: fr || 5 }),
+    initiateHitEndpoint('get', 'direct_messages/events/list', { count: dm || 5 }),
   ];
 
   function firstDataFn(results) {
