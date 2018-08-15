@@ -8,14 +8,14 @@ html
       .app--section--header
         .grid-33
           .app--section--heading
-            h2 Timeline
+            h2 #{!!timeline && timeline.length > 0 ? 'Timeline' : 'no tweets returned'}
         .grid-33
           .app--section--heading
-            strong #{numFollowed}
-            h2 Following
+            strong #{!!following && following.length > -1 ? numFollowed : ''}
+            h2 #{!!following && following.length > -1 ? 'Following' : 'no follows returned'}
         .grid-33
           .app--section--heading
-            h2 Direct Messages
+            h2 #{!!dms && dms.length > 0 ? 'Direct Messages' : 'no DMs returned'}
       include includes/timeline.pug
       include includes/following.pug
       include includes/dms.pug

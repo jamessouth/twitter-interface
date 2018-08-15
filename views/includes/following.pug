@@ -2,5 +2,5 @@ include friendo.pug
 .grid-33
   .app--section
     ul.app--user--list
-      each val in following
-        +Friend(val[0], val[1], val[2])
+      each val in !!following ? following : []
+        +Friend(val.name, val.scrName, val.img)

@@ -2,5 +2,5 @@ include tweet.pug
 .grid-33
   .app--section
     ul.app--tweet--list
-      each val in timeline
-        +Tweet(val[6], val[3], val[2], val[1], val[0], val[4], val[5])
+      each val in !!timeline ? timeline : []
+        +Tweet(val.time, val.img, val.scrName, val.userName, val.text, val.retweets, val.likes)

@@ -12,19 +12,24 @@ app.use(express.static('css'));
 app.use(express.static('images'));
 app.set('view engine', 'pug');
 
-function hitEndpoint(method, endpoint, config, cb) {
+function hitEndpoint(method, endpoint, config, resolve, reject) {
+  // eslint-disable-next-line
   console.log(`requesting: ${method, endpoint}`, Date.now());
-  if (method === 'get') {
-    cb(Tweet.get(endpoint, config));
-  } else {
-    cb(Tweet.post(endpoint, config));
-  }
 
+  try {
+    if (method === 'get') {
+      resolve(Tweet.get(endpoint, config));
+    } else {
+      resolve(Tweet.post(endpoint, config));
+    }
+  } catch (err) {
+    reject(err);
+  }
 }
 
 function initiateHitEndpoint(method, endpoint, config) {
-  return new Promise((resolve) => {
-    hitEndpoint(method, endpoint, config, resolve);
+  return new Promise((resolve, reject) => {
+    hitEndpoint(method, endpoint, config, resolve, reject);
   });
 }
 
@@ -39,6 +44,8 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
+  if (req.method !== 'GET') return next();
+
   const userID = Tweet.config.access_token.split('-')[0];
 
   const APICallArray = [
@@ -52,8 +59,11 @@ app.use(async (req, res, next) => {
     app.locals.user = processUser(results[0]);
     app.locals.timeline = processTimeline(results[1]);
     app.locals.following = processFollowing(results[2]);
-    app.locals.numFollowed = app.locals.following.length;
+    app.locals.numFollowed = app.locals.following ? app.locals.following.length : 0;
     app.locals.dms = preProcessDMs(results[3]);
+    if (!app.locals.dms || app.locals.dms.length === 0) {
+      return null;
+    }
     const { to, from } = app.locals.dms[0];
     return Promise.all([
       initiateHitEndpoint('get', 'users/show', { user_id: from }),
@@ -62,6 +72,9 @@ app.use(async (req, res, next) => {
   }
 
   function secondDataFn(results) {
+    if (!results) {
+      return null;
+    }
     const pkg = results.map((user) => {
       const temp = {
         id: user.data.id_str,
@@ -82,10 +95,12 @@ app.use(async (req, res, next) => {
     });
   }
 
-  initiateHitEndpoint('get', 'application/rate_limit_status').then((r) => {
-    console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
-  });
   try {
+    // throw new Error('noooooooooo!');
+    initiateHitEndpoint('get', 'application/rate_limit_status').then((r) => {
+      console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
+    }).catch(() => {});
+
     const resultsOne = await Promise.all(APICallArray);
     const resultsTwo = await firstDataFn(resultsOne);
     secondDataFn(resultsTwo);
@@ -94,17 +109,10 @@ app.use(async (req, res, next) => {
     next(err);
   }
 });
-
+// eslint-disable-next-line
 app.post('/', urleParser, async (req, res, next) => {
   await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
-
-  // initiateHitEndpoint('get', 'statuses/user_timeline', { count: 5 }),
-
-  
-    // .then(r => {
-    //   app.locals.timeline = r.data.map(x => [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)])
   res.redirect('/');
-    // }, err => next(err));
 });
 
 // no apparent need to pass in locals, they seem to be available by default,
@@ -113,14 +121,10 @@ app.get('/', (req, res) => {
   res.render('index', app.locals);
 });
 
-app.use((req, res, next) => {
-  const err = new Error('Page Not Found...');
-  next(err);
-});
 // eslint-disable-next-line
 app.use((err, req, res, next) => {
-  const user = app.locals.user || ['', '', ''];
-  res.render('error', { message: err.message, user });
+  console.log(err);
+  res.render('error', { message: err.message });
 });
 
 app.listen(3000);

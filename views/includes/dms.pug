@@ -3,8 +3,8 @@ include dm.pug
   .app--section
     ul.app--message--list
       li
-        h3 Conversation with
+        h3 #{!!dms && dms.length > 0 ? 'Conversation with' : ''}
           a  #{dmConvoWith}
         ul.app--message--conversation
-          each val in dms
+          each val in !!dms ? dms : []
             +DirectMessage(val.sender.classToApply, val.sender.img, val.text, val.created)

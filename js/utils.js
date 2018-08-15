@@ -4,11 +4,11 @@ moment.updateLocale('en', { relativeTime: { d: '1 day', h: '1 hour', m: '1 minut
 
 Object.assign(exports, {
   processUser(dataPkg) {
-    return [
-      dataPkg.data.screen_name,
-      dataPkg.data.profile_image_url_https,
-      dataPkg.data.profile_banner_url,
-    ];
+    return {
+      scrName: dataPkg.data.screen_name,
+      img: dataPkg.data.profile_image_url_https,
+      banner: dataPkg.data.profile_banner_url,
+    };
   },
 
   processTimeline(dataPkg) {
@@ -24,19 +24,23 @@ Object.assign(exports, {
       return time.fromNow(true).replace(/(\d{1,2}) (\w+)/i, abbrev);
     }
 
-    return dataPkg.data.map(twt => [
-      twt.text,
-      `@${twt.user.screen_name}`,
-      twt.user.name,
-      twt.user.profile_image_url_https,
-      twt.retweet_count,
-      twt.favorite_count,
-      twitterTime(twt.created_at),
-    ]);
+    return dataPkg.data.map(twt => ({
+      text: twt.text,
+      scrName: `@${twt.user.screen_name}`,
+      userName: twt.user.name,
+      img: twt.user.profile_image_url_https,
+      retweets: twt.retweet_count,
+      likes: twt.favorite_count,
+      time: twitterTime(twt.created_at),
+    }));
   },
 
   processFollowing(dataPkg) {
-    return dataPkg.data.users.map(fr => [fr.name, `@${fr.screen_name}`, fr.profile_image_url_https]);
+    return dataPkg.data.users.map(fr => ({
+      name: fr.name,
+      scrName: `@${fr.screen_name}`,
+      img: fr.profile_image_url_https,
+    }));
   },
 
   preProcessDMs(dataPkg) {
