@@ -2,8 +2,8 @@
   form(action="/", method="POST")
     .circle--fluid
       .circle--fluid--cell.circle--fluid--primary.align-bottom.app--tweet--post
-        .app--avatar(style=`background-image: url(${user[1]})`)
-          img(src=user[1])
+        .app--avatar(style=!!user && user.hasOwnProperty('img') && !!user.img ? `background-image: url(${user.img})` : '')
+          img(src=!!user && user.hasOwnProperty('img') && !!user.img ? user.img : '')
         textarea#tweet-textarea.circle--textarea--input(placeholder="What's happening?", name="tweet", required="true", maxlength="280", minlength="0")
         strong#tweet-char.app--tweet--char 280
       .circle--fluid--cell.align-bottom

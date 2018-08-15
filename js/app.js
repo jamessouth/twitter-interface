@@ -1,123 +1,130 @@
 const express = require('express');
-const moment = require('moment');
 const bodyParser = require('body-parser');
 const Tweet = require('../config');
-const app = express();
-const urleParser = bodyParser.urlencoded({extended: false});
 
-moment.updateLocale('en', {relativeTime: {d: '1 day', h: '1 hour', m: '1 minute'}});
+const app = express();
+const urleParser = bodyParser.urlencoded({ extended: false });
+const {
+  processUser, processTimeline, processFollowing, preProcessDMs,
+} = require('./utils');
 
 app.use(express.static('css'));
 app.use(express.static('images'));
 app.set('view engine', 'pug');
 
-function abbrev(match, p1, p2){
-  return `${p1}${p2[0]}`;
-}
+function hitEndpoint(method, endpoint, config, resolve, reject) {
+  // eslint-disable-next-line
+  console.log(`requesting: ${method, endpoint}`, Date.now());
 
-function package(p){
-  if(p.data.errors){
-    const err = new Error();
-    err.message = p.data.errors[0].message || 'Data error - please try again.';
-    return Promise.reject(err);
-  } else {
-    return p;
+  try {
+    if (method === 'get') {
+      resolve(Tweet.get(endpoint, config));
+    } else {
+      resolve(Tweet.post(endpoint, config));
+    }
+  } catch (err) {
+    reject(err);
   }
 }
 
-async function callAPI(endpoint, config){
-  try{
-    let pkg = await Tweet.get(endpoint, config);
-    return package(pkg);
-  } catch(e){
-    e.message = e.message || 'Data error - please try again.';
-    return Promise.reject(e);
-  }
-}
-
-function twitterTime(timeString){
-  let time = moment(timeString, 'ddd MMM DD HH:mm:ss ZZ YYYY');
-  if(time.diff(moment()) < -518400000){//6 days
-    return time.format('DD MMM');
-  } else {
-    return time.fromNow(true).replace(/(\d{1,2}) (\w+)/i, abbrev);
-  }
-}
-
-app.use((req, res, next) => {
-  const id = Tweet.config.access_token.split('-')[0];
-  callAPI('users/show', {user_id: id}).then(r => {
-    app.locals.user = [r.data.screen_name, r.data.profile_image_url_https, r.data.profile_banner_url];
-    next();
-  }, err => {
-    next(err);
+function initiateHitEndpoint(method, endpoint, config) {
+  return new Promise((resolve, reject) => {
+    hitEndpoint(method, endpoint, config, resolve, reject);
   });
+}
+
+// the default request for an icon sometimes calls the
+// middleware again and double-requests the twitter data,
+// so this shuts that off so there's only one request
+app.use((req, res, next) => {
+  if (req.originalUrl && req.originalUrl.includes('favicon')) {
+    return res.sendStatus(204);
+  }
+  return next();
 });
 
-app.use((req, res, next) => {
-  callAPI('statuses/user_timeline', {count: 5}).then(r => {
-    app.locals.timeline = r.data.map(x => [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)]);
-    next();
-  }, err =>  next(err));
-});
+app.use(async (req, res, next) => {
+  if (req.method !== 'GET') return next();
 
-app.use((req, res, next) => {
-  callAPI('friends/list', {count: 5}).then(r => {
-    app.locals.following = r.data.users.map(x => [x.name, `@${x.screen_name}`, x.profile_image_url_https]);
-    app.locals.numFollowed = r.data.users.length;
-    next();
-  }, err => next(err));
-});
+  const userID = Tweet.config.access_token.split('-')[0];
 
-app.use((req, res, next) => {
-  callAPI('direct_messages/events/list', {count: 6}).then(r => {
-    console.log(r);
-    Promise.all(r.data.events.reverse().map(async x => {
-      try{
-        let sender = await callAPI('users/show', {user_id: x.message_create.sender_id});
-        let recipient = await callAPI('users/show', {user_id: x.message_create.target.recipient_id});
-        return [recipient.data.name, recipient.data.screen_name, recipient.data.profile_image_url_https, sender.data.name, sender.data.screen_name, sender.data.profile_image_url_https, x.message_create.message_data.text, moment(x.created_timestamp, 'x').fromNow()];
-      } catch(e){
-        e.message = e.message || 'Data error - please try again.';
-        return Promise.reject(e);
+  const APICallArray = [
+    initiateHitEndpoint('get', 'users/show', { user_id: userID }),
+    initiateHitEndpoint('get', 'statuses/user_timeline', { count: 5 }),
+    initiateHitEndpoint('get', 'friends/list', { count: 5 }),
+    initiateHitEndpoint('get', 'direct_messages/events/list', { count: 6 }),
+  ];
+
+  function firstDataFn(results) {
+    app.locals.user = processUser(results[0]);
+    app.locals.timeline = processTimeline(results[1]);
+    app.locals.following = processFollowing(results[2]);
+    app.locals.numFollowed = app.locals.following ? app.locals.following.length : 0;
+    app.locals.dms = preProcessDMs(results[3]);
+    if (!app.locals.dms || app.locals.dms.length === 0) {
+      return null;
+    }
+    const { to, from } = app.locals.dms[0];
+    return Promise.all([
+      initiateHitEndpoint('get', 'users/show', { user_id: from }),
+      initiateHitEndpoint('get', 'users/show', { user_id: to }),
+    ]);
+  }
+
+  function secondDataFn(results) {
+    if (!results) {
+      return null;
+    }
+    const pkg = results.map((user) => {
+      const temp = {
+        id: user.data.id_str,
+        name: user.data.name,
+        scrName: user.data.screen_name,
+        img: user.data.profile_image_url_https,
+      };
+      const classToApply = userID === temp.id ? 'app--message--me' : 'app--message';
+      return { ...temp, classToApply };
+    });
+    app.locals.dmConvoWith = userID !== pkg[0].id ? pkg[0].scrName : pkg[1].scrName;
+    const [firstParty, secondParty] = pkg;
+    app.locals.dms = app.locals.dms.map((dm) => {
+      if (dm.to === firstParty.id) {
+        return { ...dm, sender: { ...secondParty }, recipient: { ...firstParty } };
       }
-    })).then(n => app.locals.dms = n, err => next(err)).then(() => next()), err => next(err)});
+      return { ...dm, sender: { ...firstParty }, recipient: { ...secondParty } };
+    });
+  }
+
+  try {
+    // throw new Error('noooooooooo!');
+    initiateHitEndpoint('get', 'application/rate_limit_status').then((r) => {
+      console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
+    }).catch(() => {});
+
+    const resultsOne = await Promise.all(APICallArray);
+    const resultsTwo = await firstDataFn(resultsOne);
+    secondDataFn(resultsTwo);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+// eslint-disable-next-line
+app.post('/', urleParser, async (req, res, next) => {
+  await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
+  res.redirect('/');
 });
 
-app.post('/', urleParser, (req, res, next) => {
-  Tweet.post('statuses/update', {status: req.body.tweet}).
-    then(pkg => package(pkg), err => next(err)).
-    then(() => callAPI('statuses/user_timeline', {count: 5}), err => {
-      next(err);
-      return Promise.reject(err);
-    }).
-    then(r => {
-      app.locals.timeline = r.data.map(x => [x.text, `@${x.user.screen_name}`, x.user.name, x.user.profile_image_url_https, x.retweet_count, x.favorite_count, twitterTime(x.created_at)])
-      res.redirect('/');
-    }, err => next(err));
-});
-
+// no apparent need to pass in locals, they seem to be available by default,
+// but I can't find this documented anywhere so I'm passing them into the render method
 app.get('/', (req, res) => {
-  const data = app.locals;
-  const timeline = data.timeline;
-  const following = data.following;
-  const numFollowed = data.numFollowed;
-  const user = data.user || ['', '', ''];
-  const dms = data.dms;
-  res.render('index', {timeline, following, numFollowed, user, dms});
+  res.render('index', app.locals);
 });
 
-app.use((req, res, next) => {
-  const err = new Error('Page Not Found...');
-  next(err);
-});
-
+// eslint-disable-next-line
 app.use((err, req, res, next) => {
-  const user = app.locals.user || ['', '', ''];
-  res.render('error', {message: err.message, user});
+  console.log(err);
+  res.render('error', { message: err.message });
 });
 
 app.listen(3000);
-
-// potential TODO - on error code 88 (rate limit exceeded) implement info display or countdown as to how long until the reset????
-// potential TODO - implement socket.io????

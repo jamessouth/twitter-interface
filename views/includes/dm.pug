@@ -1,5 +1,5 @@
-mixin DirectMessage(me, image, text, time)
-  li(class=me ? "app--message--me" : "app--message")
+mixin DirectMessage(userClass, image, text, time)
+  li(class=`${userClass}`)
     .app--avatar(style=`background-image: url(${image})`)
       img(src=image)
     p.app--message--text #{text}
