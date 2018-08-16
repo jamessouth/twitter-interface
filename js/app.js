@@ -112,7 +112,10 @@ app.use(async (req, res, next) => {
 });
 // eslint-disable-next-line
 app.post('/', urleParser, async (req, res, next) => {
-  await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
+  console.log(req.body);
+  if (req.body.hasOwnProperty('tweet')) {
+    await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
+  }
   res.redirect('/');
 });
 
