@@ -13,9 +13,6 @@ app.use(express.static('images'));
 app.set('view engine', 'pug');
 
 function hitEndpoint(method, endpoint, config, resolve, reject) {
-  // eslint-disable-next-line
-  console.log(`requesting: ${method, endpoint}`, Date.now());
-
   try {
     if (method === 'get') {
       resolve(Tweet.get(endpoint, config));
@@ -46,13 +43,13 @@ app.use((req, res, next) => {
 app.use(async (req, res, next) => {
   if (req.method !== 'GET') return next();
 
+  const [, , tl, fr, dirmsg] = process.argv.map(arg => Math.abs(parseInt(arg, 10)));
   const userID = Tweet.config.access_token.split('-')[0];
-
   const APICallArray = [
     initiateHitEndpoint('get', 'users/show', { user_id: userID }),
-    initiateHitEndpoint('get', 'statuses/user_timeline', { count: 5 }),
-    initiateHitEndpoint('get', 'friends/list', { count: 5 }),
-    initiateHitEndpoint('get', 'direct_messages/events/list', { count: 6 }),
+    initiateHitEndpoint('get', 'statuses/user_timeline', { count: tl || 25 }),
+    initiateHitEndpoint('get', 'friends/list', { count: fr || 25 }),
+    initiateHitEndpoint('get', 'direct_messages/events/list', { count: dirmsg || 25 }),
   ];
 
   function firstDataFn(results) {
@@ -96,11 +93,6 @@ app.use(async (req, res, next) => {
   }
 
   try {
-    // throw new Error('noooooooooo!');
-    initiateHitEndpoint('get', 'application/rate_limit_status').then((r) => {
-      console.log(r.data.resources.users['/users/show/:id'], r.data.resources.friends['/friends/list'], r.data.resources.statuses['/statuses/user_timeline'], r.data.resources.direct_messages['/direct_messages/events/list'], r.data.resources.application['/application/rate_limit_status']);
-    }).catch(() => {});
-
     const resultsOne = await Promise.all(APICallArray);
     const resultsTwo = await firstDataFn(resultsOne);
     secondDataFn(resultsTwo);
@@ -109,9 +101,14 @@ app.use(async (req, res, next) => {
     next(err);
   }
 });
-// eslint-disable-next-line
+
 app.post('/', urleParser, async (req, res, next) => {
-  await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
+  if (req.body.tweet) {
+    await initiateHitEndpoint('post', 'statuses/update', { status: req.body.tweet });
+  }
+  if (req.body.unfollow_id) {
+    await initiateHitEndpoint('post', 'friendships/destroy', { user_id: req.body.unfollow_id });
+  }
   res.redirect('/');
 });
 
@@ -121,9 +118,7 @@ app.get('/', (req, res) => {
   res.render('index', app.locals);
 });
 
-// eslint-disable-next-line
 app.use((err, req, res, next) => {
-  console.log(err);
   res.render('error', { message: err.message });
 });
 

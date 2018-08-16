@@ -3,4 +3,4 @@ include friendo.pug
   .app--section
     ul.app--user--list
       each val in !!following ? following : []
-        +Friend(val.name, val.scrName, val.img)
+        +Friend(val.name, val.scrName, val.img, val.id)
