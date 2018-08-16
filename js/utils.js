@@ -37,6 +37,7 @@ Object.assign(exports, {
 
   processFollowing(dataPkg) {
     return dataPkg.data.users.map(fr => ({
+      id: fr.id_str,
       name: fr.name,
       scrName: `@${fr.screen_name}`,
       img: fr.profile_image_url_https,

@@ -1,4 +1,4 @@
-mixin Friend(name, user, image)
+mixin Friend(name, user, image, user_id)
   li
     .circle--fluid
       .circle--fluid--cell.circle--fluid--primary
@@ -9,4 +9,5 @@ mixin Friend(name, user, image)
           p #{user}
       .circle--fluid--cell
         form(action="/", method="POST")
+          input(type="hidden", name="unfollow_id", value=user_id)
           button.button-primary(type="submit") Unfollow
