@@ -4,11 +4,9 @@ A node/express Twitter interface with moment.js and pug and eslint so it all loo
 
 Twitter cursors results for pagination and this sometimes results in fewer DMs being returned than were requested.  
 
-Twitter is about to deprecate the current app process and I haven't explored the new one yet, so the below may no longer work.
-
 Download the ZIP, run ```npm install``` then ```npm start``` and the server will be running on your localhost port 3000.
 
-Using ```npm start``` will call the API with default values of 25 for all counts, but if you use ```node js/app.js``` to start the server, you can add command line arguments afterwards to get different amounts, subject to Twitter's maximums.  So for instance ```node js/app.js 20 13 12``` will request 20 tweets, 13 follows and 12 DMs. 
+Using ```npm start``` will call the API with default values of 25 for all counts, but if you use ```node js/app.js``` to start the server, you can add command line arguments afterwards to get different amounts, subject to Twitter's maximums.  So for instance ```node js/app.js 20 13 12``` will request 20 tweets, 13 follows and 12 DMs.
 
 To run you need to create an app on Twitter at https://apps.twitter.com/.  This will create the tokens and secrets you need to access your account through this project.  Then use them in a file called config.js that is formatted like this:
 
@@ -27,5 +25,4 @@ module.exports = T;
 
 ```
 
-That should do it!  Presently you CAN tweet and unfollow through this app but the other functions (like, retweet, reply, DM, sign out, etc) aren't set up. 
-
+That should do it!  Presently you CAN tweet and unfollow through this app but the other functions (like, retweet, reply, DM, sign out, etc) aren't set up.
