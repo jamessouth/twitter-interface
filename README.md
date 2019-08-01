@@ -1,4 +1,4 @@
-# JS-Project-7
+# twitter-interface
 
 A node/express Twitter interface with moment.js and pug and eslint so it all looks real nice.  Refactored school project that was originally completed in April 2018 and is now, IMO, much cleaner and more maintainable.  Hits Twitter API endpoints to get last 25 tweets, last 25 follows and last 25 DMs, unless you enter different numbers in the command line when you start the server, and allows the posting of new Tweets and the unfollowing of followed accounts.  Styles were provided by Treehouse and have not been modified by me.
 

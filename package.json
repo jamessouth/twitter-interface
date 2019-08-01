@@ -1,5 +1,5 @@
 {
-  "name": "js-project-7",
+  "name": "twitter-interface",
   "version": "1.0.0",
   "description": "node/express twitter interface",
   "main": "js/app.js",
@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jamessouth/JS-Project-7.git"
+    "url": "git+https://github.com/jamessouth/twitter-interface.git"
   },
   "keywords": [
     "node",
@@ -20,9 +20,9 @@
   "author": "james south",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jamessouth/JS-Project-7/issues"
+    "url": "https://github.com/jamessouth/twitter-interface/issues"
   },
-  "homepage": "https://github.com/jamessouth/JS-Project-7#readme",
+  "homepage": "https://github.com/jamessouth/twitter-interface#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
